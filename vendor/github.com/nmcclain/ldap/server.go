@@ -2,13 +2,15 @@ package ldap
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
 	"net"
 	"strings"
 	"sync"
+	"time"
 
-	"github.com/nmcclain/asn1-ber"
+	ber "github.com/nmcclain/asn1-ber"
 )
 
 type Binder interface {
@@ -225,6 +227,18 @@ listener:
 func (server *Server) handleConnection(conn net.Conn) {
 	boundDN := "" // "" == anonymous
 
+	fmt.Printf("New connection: %v\n", conn.RemoteAddr())
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		fmt.Println("Sending LDAP_NOTICE_OF_DISCONNECTION")
+		responsePacket := encodeLDAPResponse(0, ApplicationExtendedResponse, LDAPResultOther, "1.3.6.1.4.1.1466.20036")
+		if err := sendPacket(conn, responsePacket); err != nil {
+			log.Printf("sendPacket error %s", err.Error())
+		}
+		conn.Close()
+	}()
+
 handler:
 	for {
 		// read incoming LDAP packet
@@ -355,6 +369,8 @@ handler:
 			}
 		}
 	}
+
+	fmt.Printf("Closing connection: %v\n", conn.RemoteAddr())
 
 	for _, c := range server.CloseFns {
 		c.Close(boundDN, conn)
