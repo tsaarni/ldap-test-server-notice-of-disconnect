@@ -1,0 +1,6 @@
+# github.com/nmcclain/asn1-ber v0.0.0-20170104154839-2661553a0484
+## explicit
+github.com/nmcclain/asn1-ber
+# github.com/nmcclain/ldap v0.0.0-20191021200707-3b3b69a7e9e3
+## explicit
+github.com/nmcclain/ldap
