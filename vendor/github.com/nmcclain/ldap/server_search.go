@@ -3,6 +3,7 @@ package ldap
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"strings"
 
@@ -30,6 +31,7 @@ func HandleSearchRequest(req *ber.Packet, controls *[]Control, messageID uint64,
 	for k := range server.SearchFns {
 		fnNames = append(fnNames, k)
 	}
+	log.Printf("%v SEARCH %v", conn.RemoteAddr(), searchReq)
 	fn := routeFunc(searchReq.BaseDN, fnNames)
 	searchResp, err := server.SearchFns[fn].Search(boundDN, searchReq, conn)
 	if err != nil {

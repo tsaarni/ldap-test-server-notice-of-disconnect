@@ -1,9 +1,10 @@
 package ldap
 
 import (
-	"github.com/nmcclain/asn1-ber"
 	"log"
 	"net"
+
+	ber "github.com/nmcclain/asn1-ber"
 )
 
 func HandleBindRequest(req *ber.Packet, fns map[string]Binder, conn net.Conn) (resultCode LDAPResultCode) {
@@ -40,6 +41,7 @@ func HandleBindRequest(req *ber.Packet, fns map[string]Binder, conn net.Conn) (r
 				fnNames = append(fnNames, k)
 			}
 			fn := routeFunc(bindDN, fnNames)
+			log.Printf("%v BIND bindDN=%s, bindPassword=%s", conn.RemoteAddr(), bindDN, bindAuth.Data.String())
 			resultCode, err := fns[fn].Bind(bindDN, bindAuth.Data.String(), conn)
 			if err != nil {
 				log.Printf("BindFn Error %s", err.Error())

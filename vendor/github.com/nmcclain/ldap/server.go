@@ -2,13 +2,11 @@ package ldap
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"strings"
 	"sync"
-	"time"
 
 	ber "github.com/nmcclain/asn1-ber"
 )
@@ -227,17 +225,18 @@ listener:
 func (server *Server) handleConnection(conn net.Conn) {
 	boundDN := "" // "" == anonymous
 
-	fmt.Printf("New connection: %v\n", conn.RemoteAddr())
+	log.Printf("%v established connection\n", conn.RemoteAddr())
+	defer log.Printf("%v client closed connection", conn.RemoteAddr())
 
-	go func() {
-		time.Sleep(5 * time.Second)
-		fmt.Println("Sending LDAP_NOTICE_OF_DISCONNECTION")
-		responsePacket := encodeLDAPResponse(0, ApplicationExtendedResponse, LDAPResultOther, "1.3.6.1.4.1.1466.20036")
-		if err := sendPacket(conn, responsePacket); err != nil {
-			log.Printf("sendPacket error %s", err.Error())
-		}
-		conn.Close()
-	}()
+	// go func() {
+	// 	time.Sleep(10 * time.Second)
+	// 	log.Printf("%v Sending LDAP_NOTICE_OF_DISCONNECTION", conn.RemoteAddr())
+	// 	// responsePacket := encodeLDAPResponse(0, ApplicationExtendedResponse, LDAPResultOther, "1.3.6.1.4.1.1466.20036")
+	// 	// if err := sendPacket(conn, responsePacket); err != nil {
+	// 	// 	log.Printf("sendPacket error %s", err.Error())
+	// 	// }
+	// 	conn.Close()
+	// }()
 
 handler:
 	for {
@@ -320,6 +319,7 @@ handler:
 			}
 		case ApplicationUnbindRequest:
 			server.Stats.countUnbinds(1)
+			log.Printf("%v UNBIND bindDN=%s", conn.RemoteAddr(), boundDN)
 			break handler // simply disconnect
 		case ApplicationExtendedRequest:
 			ldapResultCode := HandleExtendedRequest(req, boundDN, server.ExtendedFns, conn)
@@ -369,14 +369,6 @@ handler:
 			}
 		}
 	}
-
-	fmt.Printf("Closing connection: %v\n", conn.RemoteAddr())
-
-	for _, c := range server.CloseFns {
-		c.Close(boundDN, conn)
-	}
-
-	conn.Close()
 }
 
 //

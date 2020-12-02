@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -14,8 +13,16 @@ func main() {
 	s.BindFunc("", handler)
 	s.SearchFunc("", handler)
 
-	if err := s.ListenAndServe("localhost:9011"); err != nil {
-		log.Fatal("LDAP Server Failed: %s", err.Error())
+	tls := false
+
+	if tls {
+		if err := s.ListenAndServeTLS("localhost:9011", "/home/tsaarni/packages/openldap/tests/testrun/tls/certs/localhost.crt", "/home/tsaarni/packages/openldap/tests/testrun/tls/private/localhost.key"); err != nil {
+			log.Fatal("LDAP Server Failed: %s", err.Error())
+		}
+	} else {
+		if err := s.ListenAndServe("localhost:9011"); err != nil {
+			log.Fatal("LDAP Server Failed: %s", err.Error())
+		}
 	}
 }
 
@@ -23,11 +30,13 @@ type ldapHandler struct {
 }
 
 func (h ldapHandler) Bind(bindDN, bindSimplePw string, conn net.Conn) (ldap.LDAPResultCode, error) {
-	fmt.Println("Got bind request:", bindDN)
 	if bindDN == "" && bindSimplePw == "" {
 		return ldap.LDAPResultSuccess, nil
 	}
 	if bindDN == "cn=Barbara Jensen,ou=Information Technology Division,ou=People,dc=example,dc=com" && bindSimplePw == "bjensen" {
+		return ldap.LDAPResultSuccess, nil
+	}
+	if bindDN == "cn=manager,dc=example,dc=com" && bindSimplePw == "secret" {
 		return ldap.LDAPResultSuccess, nil
 	}
 	return ldap.LDAPResultInvalidCredentials, nil
