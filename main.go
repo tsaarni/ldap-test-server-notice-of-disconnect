@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"strings"
 
 	"github.com/nmcclain/ldap"
 )
@@ -33,7 +34,8 @@ func (h ldapHandler) Bind(bindDN, bindSimplePw string, conn net.Conn) (ldap.LDAP
 	if bindDN == "" && bindSimplePw == "" {
 		return ldap.LDAPResultSuccess, nil
 	}
-	if bindDN == "cn=Barbara Jensen,ou=Information Technology Division,ou=People,dc=example,dc=com" && bindSimplePw == "bjensen" {
+	//if bindDN == "cn=Barbara Jensen,ou=Information Technology Division,ou=People,dc=example,dc=com" && bindSimplePw == "bjensen" {
+	if strings.EqualFold(bindDN, "cn=Barbara Jensen,ou=Information Technology Division,ou=People,dc=example,dc=com") && bindSimplePw == "bjensen" {
 		return ldap.LDAPResultSuccess, nil
 	}
 	if bindDN == "cn=manager,dc=example,dc=com" && bindSimplePw == "secret" {
